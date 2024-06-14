@@ -28,6 +28,11 @@ class SwitchSequential(nn.Sequential):
         for layer in self:
             if isinstance(layer, UNET_AttentionBlock):
                 x = layer(x, context) #note: UNET_attention will compute the cross attention between latent and prompt
+            elif isinstance(layer, UNET_ResidualBlock) #note: will match latent with its timestamp
+                x = layer(x, time)
+            else:
+                x = layer(x)
+        return x
 
 class UNET(nn.Module):
 
@@ -37,7 +42,14 @@ class UNET(nn.Module):
         self.encoders - nn.Module([
             SwitchSequential(nn.Conv2d(4, 320, kernel_size=3, padding=1)),
 
-            SwitchSequential(UNET_residualBlock(320,320), UNET_AttentionBlock(8,40))
+            SwitchSequential(UNET_ResidualBlock(320,320), UNET_AttentionBlock(8,40)),
+
+            SwitchSequential(UNET_ResidualBlock(320,320), UNET_AttentionBlock(8,40)),
+
+            SwitchSequential(nn.Conv2d(320, 320, kernel_size=3, padding=1)),
+
+            SwitchSequential(UNET_ResidualBlock(320,640), UNET_AttentionBlock(8,80)),
+
         ])
     
 class Diffusion(nn.Module):
