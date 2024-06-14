@@ -28,7 +28,7 @@ class SwitchSequential(nn.Sequential):
         for layer in self:
             if isinstance(layer, UNET_AttentionBlock):
                 x = layer(x, context) #note: UNET_attention will compute the cross attention between latent and prompt
-            elif isinstance(layer, UNET_ResidualBlock) #note: will match latent with its timestamp
+            elif isinstance(layer, UNET_ResidualBlock): #note: will match latent with its timestamp
                 x = layer(x, time)
             else:
                 x = layer(x)
