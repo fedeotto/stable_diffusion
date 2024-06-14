@@ -69,7 +69,25 @@ class VAE_Encoder(nn.Sequential):
                 x = F.pad(x, (0,1,0,1)) #asymmetrical padding for convolutions with stride==2
             
             x = module(x)
+        
+        # (batch_size, 8, height/8, width/8) -> (batch_size, 4, height/8, width/8)
+        mean, log_variance = torch.chunk(x, 2, dim=1) #split the tensor into 2 parts
 
+        # (batch_size, 4, height/8, width/8) -> (batch_size, 4, height/8, width/8)
+        log_variance = torch.clamp(log_variance, min=-30, max=20) #clamping the log_variance to avoid numerical instability
 
+        # (batch_size, 4, height/8, width/8) -> (batch_size, 4, height/8, width/8)
+        variance = torch.exp(log_variance)
 
-            
+        # (batch_size, 4, height/8, width/8) -> (batch_size, 4, height/8, width/8)
+        stdev = torch.sqrt(variance) #standard deviation
+
+        #Z = N(0,1) - > N(mean, stdev)?
+        # X = mean + stdev * Z
+
+        x = mean + stdev * noise
+
+        #Scale the output by a constant (done in the original stable diffusion)
+        x *= 0.18215
+
+        return x
