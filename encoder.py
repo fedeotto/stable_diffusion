@@ -57,8 +57,19 @@ class VAE_Encoder(nn.Sequential):
 
              # (batch_size, 8, height/8, width/8) -> (batch_size, 8, height/8, width/8)
             nn.Conv2d(8,8, kernel_size=1, padding=0)
-            
             )
     
-    def forward(self):
-        pass
+    def forward(self, x:torch.Tensor, noise: torch.Tensor) -> torch.Tensor:
+        # x: (batch_size, channel, height, width)
+        # noise: (batch_size, out_channels, height/8, width/8)
+
+        for module in self:
+            if getattr(module, 'stride', None) == (2,2):
+                # (Padding_Left, Padding_Right, Padding_Top, Padding_Bottom)
+                x = F.pad(x, (0,1,0,1)) #asymmetrical padding for convolutions with stride==2
+            
+            x = module(x)
+
+
+
+            
