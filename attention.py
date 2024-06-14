@@ -23,7 +23,7 @@ class SelfAttention(nn.Module):
 
         intermim_shape = (batch_size, sequence_length, self.n_heads, self.d_head)
 
-        # (batch_size, seq_len, dim) -> (batch_size, seq_len, 3 * dim) - > (batch_size, seq_len, dim)
+        # (batch_size, seq_len, dim) -> (batch_size, seq_len, 3 * dim) - > 3 tensors of shape (batch_size, seq_len, dim)
         q, k, v = self.in_proj(x).chunk(3, dim=-1)
 
         # (batch_size, seq_len, dim) -> (batch_size, seq_len, H , dim/h) -> (batch_size, H, seq_len, dim/h)
