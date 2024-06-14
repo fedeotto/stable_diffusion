@@ -4,7 +4,6 @@ import torch.nn.functional as F
 from attention import SelfAttention
 
 class VAE_AttentionBlock(nn.Module):
-
     def __init__(self, channels: int):
         super().__init__()
 
@@ -14,18 +13,32 @@ class VAE_AttentionBlock(nn.Module):
     def forward(self, x:torch.Tensor) -> torch.Tensor:
         # x: (batch_size, channels, height, width)
 
-        resiude = x
+        residue = x
 
         n,c,h,w = x.shape
 
-        # (batch_size, Features , height, width) -> (batch_size, channels, height * width)
+        # (batch_size, Features , height, width) -> (batch_size, Features, height * width)
         x.view(n,c,h*w)
 
-        # (batch_size, Features, height * width) -> (batch_size, channels, height * width)
+        # (batch_size, Features, height * width) -> (batch_size, height * width, Features)
+        # note: we have a sequence of pixels with each its own embedding and we relate them to each other
+        x = x.transpose(-1,-2)
+        
+        # (batch_size, height * width, Features) -> (batch_size, height * width, Features)
+        x = self.attention(x) #doesn't change the shape
+
+        # (batch_size, height * width, Features) -> (batch_size, Features, height * width)
         x = x.transpose(-1,-2)
 
+        x = x.view((n,c,h,w))
+        
+        x += residue
 
         return x
+    
+
+
+    
 class VAE_ResidualBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
