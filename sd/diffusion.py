@@ -123,6 +123,22 @@ class UNET_AttentionBlock(nn.Module):
 
         residue_short = x
 
+        # Normalization + Feedforward layer with GeGLU and skip connection
+        x = self.layernorm_3(x)
+
+        x, gate = self.linear_geglu_1(x).chunk(2, dim=-1)
+        x = x * F.gelu(gate)
+        
+        x = self.linear_geglu_2(x)
+
+        x += residue_short
+
+        # (batch_size, height * width, features) -> (batch_size, features, height * width)
+        x = x.transpose(-1,-2)
+
+        x = x.view(n, c, h, w)
+
+        return self.conv_output(x) + residue_long
 
 
 class UpSample(nn.Module):
